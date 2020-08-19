@@ -5,8 +5,21 @@ const { v4: uuid } = require('uuid');
 
 const app = express();
 
+function VerifyRepositoryExists(request, response, next) {
+  const { id } = request.params;
+  const index = repositories.findIndex(repository => repository.id == id);
+
+  if (index < 0) {
+    return response.status(400).json({ message: "Repository is not exists." });    
+  }
+
+  return next();
+
+}
+
 app.use(express.json());
 app.use(cors());
+app.use('/repositories/:id', VerifyRepositoryExists);
 
 const repositories = [];
 
@@ -36,10 +49,6 @@ app.put("/repositories/:id", (request, response) => {
 
   const index = repositories.findIndex(repository => repository.id == id);
 
-  if (index < 0) {
-    return response.status(400).json({ message: "Repository is not exists." });    
-  }
-
   const repository = {
     id,
     title, 
@@ -58,10 +67,6 @@ app.delete("/repositories/:id", (request, response) => {
 
   const index = repositories.findIndex(repository => repository.id == id);
 
-  if (index < 0) {
-    return response.status(400).json({ message: "Repository is not exists." });    
-  }
-    
   repositories.splice(index, 1);
 
   return response.status(204).send();
@@ -73,17 +78,9 @@ app.post("/repositories/:id/like", (request, response) => {
 
   const index = repositories.findIndex(repository => repository.id == id);
 
-  if (index < 0) {
-    return response.status(400).json({ message: "Repository is not exists." });    
-  }
+  repositories[index].likes = repositories[index].likes + 1;
 
-  const qtdLike = repositories[index].likes;
-
-  repositories[index].likes = qtdLike + 1;
-
-  const repository = repositories[index];
-
-  return response.status(200).json(repository);
+  return response.status(200).json(repositories[index]);
 
   });
 
